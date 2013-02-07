@@ -39,13 +39,27 @@ when "debian"
     notifies :run, "execute[apt-get update]", :immediately
   end
 
-when "rhel","fedora", "centos"
-  yum_repository "10gen" do
-    description "10gen RPM Repository"
-    url "http://downloads-distro.mongodb.org/repo/redhat/os/#{node['kernel']['machine']  =~ /x86_64/ ? 'x86_64' : 'i686'}"
-    action :add
+when "rhel","fedora"
+  # yum_repository "10gen" do
+  #   description "10gen RPM Repository"
+  #   url "http://downloads-distro.mongodb.org/repo/redhat/os/#{node['kernel']['machine']  =~ /x86_64/ ? 'x86_64' : 'i686'}"
+  #   action :add
+  # end
+
+  template "/etc/yum.repos.d/10gen.repo" do
+    source "10gen.repo"
+    mode 00644
   end
 
+  yum_package "mongo-10gen" do
+    action :install
+    flush_cache [:before]
+  end
+
+  yum_package "mongo-10gen-server" do
+    action :install
+    flush_cache [:before]
+  end
 else
     Chef::Log.warn("Adding the #{node['platform']} 10gen repository is not yet not supported by this cookbook")
 end
